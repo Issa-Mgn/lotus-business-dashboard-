@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LogOut,
   Moon,
+  Newspaper,
   ShieldCheck,
   Sun,
   Users,
@@ -17,6 +18,7 @@ const menuItems = [
   { path: '/users', icon: Users, label: 'Utilisateurs' },
   { path: '/licenses', icon: KeyRound, label: 'Licences' },
   { path: '/admins', icon: ShieldCheck, label: 'Administrateurs' },
+  { path: '/infos', icon: Newspaper, label: 'Infos' },
 ];
 
 const Sidebar = ({ open = false, onNavigate }) => {

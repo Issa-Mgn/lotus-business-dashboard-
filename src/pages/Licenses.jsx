@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState } from 'react';
-import { Calendar, Copy, Download, KeyRound, Search } from 'lucide-react';
+import { Calendar, Copy, Download, KeyRound, Mail, Search, Send, X } from 'lucide-react';
 import Badge from '../components/Badge';
 import Table from '../components/Table';
 import { licensesAPI } from '../services/api';
@@ -11,6 +11,10 @@ const Licenses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [sendingLicense, setSendingLicense] = useState(false);
+  const [sendMessage, setSendMessage] = useState('');
 
   const filteredLicenses = useMemo(() => {
     return licenses.filter((license) => {
@@ -45,6 +49,28 @@ const Licenses = () => {
       await navigator.clipboard.writeText(key);
     } catch (error) {
       console.error('Erreur copie clé:', error);
+    }
+  };
+
+  const closeSendModal = () => {
+    setShowSendModal(false);
+    setSelectedUserId('');
+    setSendMessage('');
+  };
+
+  const handleSendLicenseEmail = async (event) => {
+    event.preventDefault();
+    setSendingLicense(true);
+    setSendMessage('');
+
+    try {
+      await licensesAPI.sendLicenseEmail(selectedUserId);
+      setSendMessage('Licence renvoyée par mail avec succès.');
+    } catch (error) {
+      console.error('Erreur renvoi licence:', error);
+      setSendMessage(error.response?.data?.detail || error.response?.data?.error || "Impossible de renvoyer la licence.");
+    } finally {
+      setSendingLicense(false);
     }
   };
 
@@ -137,9 +163,14 @@ const Licenses = () => {
           <h1 className="page-title">Licences</h1>
           <p className="page-subtitle">{filteredLicenses.length} licence{filteredLicenses.length > 1 ? 's' : ''}</p>
         </div>
-        <button className="primary-button" onClick={exportCsv} type="button">
-          <span className="inline-cell"><Download size={16} /> Export CSV</span>
-        </button>
+        <div className="header-actions">
+          <button className="ghost-button" onClick={() => setShowSendModal(true)} type="button">
+            <span className="inline-cell"><Mail size={16} /> Renvoyer une licence</span>
+          </button>
+          <button className="primary-button" onClick={exportCsv} type="button">
+            <span className="inline-cell"><Download size={16} /> Export CSV</span>
+          </button>
+        </div>
       </header>
 
       <div className="toolbar">
@@ -170,6 +201,53 @@ const Licenses = () => {
         <div className="loading-state">Chargement...</div>
       ) : (
         <Table columns={columns} data={filteredLicenses} emptyMessage="Aucune licence trouvée" />
+      )}
+
+      {showSendModal && (
+        <div className="modal-overlay" onClick={closeSendModal} role="presentation">
+          <div className="modal-panel" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="send-license-title">
+            <div className="modal-header">
+              <div>
+                <h2 className="section-title" id="send-license-title">Renvoyer une licence</h2>
+                <p className="page-subtitle">Choisir l’utilisateur qui doit recevoir à nouveau sa clé de connexion.</p>
+              </div>
+              <button className="icon-button" onClick={closeSendModal} type="button" aria-label="Fermer">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form className="form" onSubmit={handleSendLicenseEmail}>
+              <label className="field">
+                <span className="field-label">Utilisateur</span>
+                <select
+                  className="select"
+                  onChange={(event) => setSelectedUserId(event.target.value)}
+                  required
+                  value={selectedUserId}
+                >
+                  <option value="">Sélectionner un utilisateur</option>
+                  {licenses.map((license) => (
+                    <option key={license.id} value={license.id}>
+                      {license.user?.firstName} {license.user?.lastName} - {license.user?.email}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {sendMessage && <p className="form-message">{sendMessage}</p>}
+
+              <div className="modal-actions">
+                <button className="ghost-button" onClick={closeSendModal} type="button">Annuler</button>
+                <button className="primary-button" disabled={sendingLicense || !selectedUserId} type="submit">
+                  <span className="inline-cell">
+                    <Send size={16} />
+                    {sendingLicense ? 'Envoi...' : 'Confirmer'}
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

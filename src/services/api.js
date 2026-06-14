@@ -100,6 +100,11 @@ export const licensesAPI = {
 
     return { licenses };
   },
+
+  sendLicenseEmail: async (userId) => {
+    const response = await api.post('/admin/send-license-email', { userId });
+    return response.data;
+  },
 };
 
 export const adminsAPI = {
@@ -114,12 +119,36 @@ export const adminsAPI = {
   },
 
   sendEmail: async (emailData) => {
-    const response = await api.post('/admin/send-email', emailData);
+    const useDebug = import.meta.env.VITE_USE_DEBUG_SEND_EMAIL === '1' || import.meta.env.VITE_USE_DEBUG_SEND_EMAIL === 'true';
+    const endpoint = useDebug ? '/admin/send-email-debug' : '/admin/send-email';
+    const response = await api.post(endpoint, emailData);
     return response.data;
   },
 
   sendLicenseEmail: async (userId) => {
     const response = await api.post('/admin/send-license-email', { userId });
+    return response.data;
+  },
+};
+
+export const infosAPI = {
+  getAll: async () => {
+    const response = await api.get('/admin/infos');
+    return response.data;
+  },
+
+  create: async (infoData) => {
+    const response = await api.post('/admin/infos', infoData);
+    return response.data;
+  },
+
+  update: async (infoId, infoData) => {
+    const response = await api.patch(`/admin/infos/${infoId}`, infoData);
+    return response.data;
+  },
+
+  remove: async (infoId) => {
+    const response = await api.delete(`/admin/infos/${infoId}`);
     return response.data;
   },
 };

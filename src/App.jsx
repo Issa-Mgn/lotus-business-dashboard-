@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Licenses from './pages/Licenses';
 import Admins from './pages/Admins';
+import Infos from './pages/Infos';
+import NotFound from './pages/NotFound';
 import { testApiConnection } from './utils/testApi';
 
 // Rendre testApiConnection accessible globalement pour debug
@@ -24,8 +26,9 @@ function App() {
             <Route path="/users" element={<Layout><Users /></Layout>} />
             <Route path="/licenses" element={<Layout><Licenses /></Layout>} />
             <Route path="/admins" element={<Layout><Admins /></Layout>} />
+            <Route path="/infos" element={<Layout><Infos /></Layout>} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
