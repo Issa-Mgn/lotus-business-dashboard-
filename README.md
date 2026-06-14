@@ -41,7 +41,7 @@ Backend :
 - Supabase PostgreSQL
 - JWT
 - bcrypt
-- Nodemailer + Gmail App Password
+- Brevo (API HTTP transactionnelle) pour l'envoi d'e-mails (remplace Nodemailer/Gmail SMTP)
 
 Frontend admin :
 
@@ -94,8 +94,10 @@ DIRECT_URL="postgresql://postgres.xxx:password@host:5432/postgres"
 
 JWT_SECRET="une_valeur_longue_et_secrete"
 
-MAIL_USER="votre_email@gmail.com"
-MAIL_APP_PASSWORD="xxxx xxxx xxxx xxxx"
+# Email (Brevo HTTP API)
+BREVO_API_KEY="xkeysib-..."
+BREVO_SENDER_EMAIL="noreply@lotusbusiness.com"
+BREVO_SENDER_NAME="Lotus Business"
 
 PORT=5000
 NODE_ENV="development"
@@ -106,8 +108,8 @@ Notes importantes :
 - `DATABASE_URL` est l'URL pooler Supabase pour Prisma en runtime.
 - `DIRECT_URL` sert aux migrations Prisma si besoin.
 - `JWT_SECRET` doit etre identique pour tous les clients API d'un meme environnement.
-- `MAIL_APP_PASSWORD` doit etre un mot de passe d'application Gmail, pas le mot de passe normal du compte.
-- Sur Render free tier, les ports SMTP peuvent etre bloques. Dans ce cas, Gmail SMTP peut marcher en local mais echouer en production. Utiliser une instance payante Render ou un service email via API HTTP comme Brevo, Resend ou SendGrid.
+- Le projet utilise désormais l'API HTTP transactionnelle Brevo pour l'envoi d'e‑mails. Configurez `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` et `BREVO_SENDER_NAME` dans `server/.env`.
+- Sur certains hébergeurs (ex: Render free tier) les ports SMTP peuvent être bloqués — l'utilisation d'une API HTTP comme Brevo évite ces limitations.
 
 Generation recommandee du secret JWT :
 
@@ -131,7 +133,47 @@ En local, si le backend tourne sur votre machine :
 VITE_API_URL=http://localhost:5000/api
 ```
 
-Point critique : ne laissez pas le dashboard local pointer vers Render si vous testez des routes backend ajoutees localement. Exemple : si `GET /api/admin/admins` marche en local mais pas sur Render, il faut soit changer `VITE_API_URL`, soit redeployer le backend Render.
+Point critique : ne laissez pas le dashboard local pointer vers Render si vous testez des routes backend ajoutées localement. Exemple : si `GET /api/admin/admins` marche en local mais pas sur Render, il faut soit changer `VITE_API_URL`, soit redeployer le backend Render.
+
+## Tester sur mobile (appareil réel)
+
+Pour tester l'interface sur un téléphone ou une tablette du même réseau local :
+
+1. Démarrez le dashboard en mode dev et écoutez toutes les interfaces :
+
+```bash
+cd dashboard/dashboard
+npm install
+npm run dev -- --host
+```
+
+2. Récupérez l'adresse IP locale de votre machine (ex. `192.168.1.42`) et ouvrez dans le navigateur du mobile : `http://<votre-ip>:5173`.
+
+3. Assurez‑vous que `VITE_API_URL` (dans `dashboard/dashboard/.env`) pointe vers l'URL du backend accessible depuis le mobile, par exemple `http://192.168.1.42:5000/api`.
+
+Contournement rapide si la page 404 n'apparaît pas (redirection vers `/login`) :
+
+Ouvrez la console du navigateur mobile (ou depuis l'inspecteur distant) et définissez temporairement l'admin en localStorage :
+
+```js
+localStorage.setItem('adminToken', 'devtoken');
+localStorage.setItem('adminData', JSON.stringify({ email: 'dev@local' }));
+location.reload();
+```
+
+Cela force `isAuthenticated` et permet de naviguer pour reproduire la `404` côté mobile sans être redirigé.
+
+## Build & Preview
+
+Pour produire un build de production et le prévisualiser :
+
+```bash
+cd dashboard/dashboard
+npm run build
+npm run preview
+```
+
+`npm run preview` lance un serveur statique local qui sert le build (utilisez `--host` si vous devez y accéder depuis un autre appareil).
 
 ## Base de donnees
 
@@ -370,32 +412,26 @@ Flux mobile recommande :
 
 ## Emails
 
-Le backend utilise :
+Le backend utilise l'API HTTP transactionnelle Brevo pour l'envoi d'e‑mails. Points clés :
 
-- `src/lib/mailer.js`
-- `src/lib/sendMail.js`
-- `src/templates/welcome.js`
+- Fichiers d'intégration : `src/config/mailer.js`, `src/services/mailService.js`
+- Templates : `src/templates/welcome.js` (HTML + texte)
+- Types d'e‑mails : inscription utilisateur, renvoi de clé, renvoi du mail de licence depuis le dashboard, test email admin
 
-Emails existants :
-
-- inscription utilisateur ;
-- renvoi de cle ;
-- renvoi du mail de licence depuis le dashboard ;
-- test email admin.
-
-Test local :
+Envoi de test local :
 
 ```bash
 cd server
 npm run test:email
 ```
 
-Si le test fonctionne localement mais pas sur Render, verifier :
+Avant de lancer le test, vérifiez que `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` et `BREVO_SENDER_NAME` sont définis dans `server/.env`.
 
-- variables `MAIL_USER` et `MAIL_APP_PASSWORD` sur Render ;
-- redeploiement du backend ;
-- limitation SMTP de Render ;
-- logs de `POST /api/admin/test-email`.
+Si le test fonctionne localement mais pas en production, vérifiez :
+
+- la validité et les permissions de la `BREVO_API_KEY` sur le tableau de bord Brevo ;
+- que les variables d'environnement sont bien définies sur votre hébergeur (Render, Vercel, etc.) ;
+- les logs du backend pour détails d'erreur retournés par l'API Brevo.
 
 ## Dashboard admin
 
