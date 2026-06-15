@@ -153,4 +153,58 @@ export const infosAPI = {
   },
 };
 
+export const notificationsAPI = {
+  getAll: async () => {
+    const response = await api.get('/notifications');
+    return response.data;
+  },
+
+  markAsRead: async (notificationId) => {
+    const response = await api.patch(`/notifications/${notificationId}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.patch('/notifications/mark-all-read');
+    return response.data;
+  },
+
+  getUnreadCount: async () => {
+    const response = await api.get('/notifications/unread-count');
+    return response.data;
+  },
+
+  delete: async (notificationId) => {
+    const response = await api.delete(`/notifications/${notificationId}`);
+    return response.data;
+  },
+};
+
+export const activityAPI = {
+  getAll: async () => {
+    const response = await api.get('/activity');
+    return response.data;
+  },
+
+  getStats: async () => {
+    const response = await api.get('/activity/stats');
+    return response.data;
+  },
+};
+
+export const profileAPI = {
+  getProfile: async () => {
+    const response = await api.get('/admin/profile');
+    return response.data;
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await api.post('/admin/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  },
+};
+
 export default api;

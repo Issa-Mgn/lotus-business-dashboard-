@@ -1,7 +1,7 @@
-const StatCard = ({ icon: Icon, label, value, tone = 'default' }) => (
+const StatCard = ({ icon: Icon, label, value, color = 'default' }) => (
   <article className="stat-card">
     <div className="stat-card-header">
-      <div className={`stat-icon tone-${tone}`}>
+      <div className={`stat-icon tone-${color}`}>
         <Icon size={24} strokeWidth={2} />
       </div>
     </div>

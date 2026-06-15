@@ -1,10 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
+  Activity,
+  Bell,
   KeyRound,
   LayoutDashboard,
   LogOut,
   Moon,
   Newspaper,
+  Settings,
   ShieldCheck,
   Sun,
   Users,
@@ -17,8 +20,11 @@ const menuItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { path: '/users', icon: Users, label: 'Utilisateurs' },
   { path: '/licenses', icon: KeyRound, label: 'Licences' },
+  { path: '/notifications', icon: Bell, label: 'Notifications' },
+  { path: '/activity', icon: Activity, label: 'Activité' },
   { path: '/admins', icon: ShieldCheck, label: 'Administrateurs' },
   { path: '/infos', icon: Newspaper, label: 'Infos' },
+  { path: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 const Sidebar = ({ open = false, onNavigate }) => {

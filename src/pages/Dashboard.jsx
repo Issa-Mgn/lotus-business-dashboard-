@@ -180,10 +180,10 @@ const Dashboard = () => {
       </header>
 
       <section className="stats-grid">
-        <StatCard icon={Users} label="Total utilisateurs" value={stats.totalUsers} />
-        <StatCard icon={KeyRound} label="Licences actives" value={stats.activeLicenses} tone="success" />
-        <StatCard icon={Clock} label="Expirent dans 7 jours" value={stats.expiringSoon} tone="warning" />
-        <StatCard icon={Wallet} label="Revenus totaux" value={formatCurrency(stats.totalRevenue)} tone="success" />
+        <StatCard icon={Users} label="Total utilisateurs" value={stats.totalUsers} color="primary" />
+        <StatCard icon={KeyRound} label="Licences actives" value={stats.activeLicenses} color="success" />
+        <StatCard icon={Clock} label="Expirent dans 7 jours" value={stats.expiringSoon} color="warning" />
+        <StatCard icon={Wallet} label="Revenus totaux" value={formatCurrency(stats.totalRevenue)} color="success" />
       </section>
 
       <section className="chart-panel">
