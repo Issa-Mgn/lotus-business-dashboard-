@@ -121,12 +121,9 @@ const Dashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [usersResponse, licensesResponse] = await Promise.all([
-        usersAPI.getAll(),
-        licensesAPI.getAll(),
-      ]);
-
+      const usersResponse = await usersAPI.getAll();
       const users = usersResponse.users || [];
+      const licensesResponse = licensesAPI.fromUsers(users);
       const licenses = licensesResponse.licenses || [];
       const activeLicenses = licenses.filter((license) => license.status === 'ACTIVE').length;
       const totalRevenue = users.reduce((total, user) => (
@@ -297,5 +294,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
 

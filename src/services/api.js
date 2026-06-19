@@ -9,6 +9,35 @@ const api = axios.create({
   },
 });
 
+const CACHE_TTL = 20 * 1000;
+const cache = {
+  users: {
+    data: null,
+    promise: null,
+    timestamp: 0,
+  },
+};
+
+const clearUsersCache = () => {
+  cache.users.data = null;
+  cache.users.promise = null;
+  cache.users.timestamp = 0;
+};
+
+const mapUsersToLicenses = (users) => users.map((user) => ({
+  id: user.id,
+  key: user.licenseKey,
+  type: user.licenseType,
+  status: user.licenseStatus,
+  createdAt: user.createdAt,
+  endDate: user.expirationDate,
+  user: {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+  },
+}));
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('adminToken');
@@ -47,26 +76,58 @@ export const authAPI = {
 export const usersAPI = {
   register: async (userData) => {
     const response = await api.post('/auth/register', userData);
+    clearUsersCache();
     return response.data;
   },
 
-  getAll: async () => {
+  getAll: async ({ force = false } = {}) => {
+    const now = Date.now();
+
+    if (!force && cache.users.data && now - cache.users.timestamp < CACHE_TTL) {
+      return cache.users.data;
+    }
+
+    if (!force && cache.users.promise) {
+      return cache.users.promise;
+    }
+
+    cache.users.promise = api.get('/admin/users')
+      .then((response) => {
+        cache.users.data = response.data;
+        cache.users.timestamp = Date.now();
+        cache.users.promise = null;
+        return response.data;
+      })
+      .catch((error) => {
+        cache.users.promise = null;
+        throw error;
+      });
+
+    return cache.users.promise;
+  },
+
+  refreshAll: async () => {
     const response = await api.get('/admin/users');
+    cache.users.data = response.data;
+    cache.users.timestamp = Date.now();
     return response.data;
   },
 
   suspend: async (userId) => {
     const response = await api.patch(`/admin/suspend/${userId}`);
+    clearUsersCache();
     return response.data;
   },
 
   forceLogout: async (userId) => {
     const response = await api.post(`/admin/force-logout/${userId}`);
+    clearUsersCache();
     return response.data;
   },
 
   upgradeToPremium: async (userId) => {
     const response = await api.post('/admin/upgrade-premium', { userId });
+    clearUsersCache();
     return response.data;
   },
 
@@ -75,31 +136,21 @@ export const usersAPI = {
       userId,
       licenseType,
     });
+    clearUsersCache();
     return response.data;
   },
 };
 
 export const licensesAPI = {
   getAll: async () => {
-    const usersResponse = await api.get('/admin/users');
-    const users = usersResponse.data.users || [];
-
-    const licenses = users.map((user) => ({
-      id: user.id,
-      key: user.licenseKey,
-      type: user.licenseType,
-      status: user.licenseStatus,
-      createdAt: user.createdAt,
-      endDate: user.expirationDate,
-      user: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-      },
-    }));
+    const usersResponse = await usersAPI.getAll();
+    const users = usersResponse.users || [];
+    const licenses = mapUsersToLicenses(users);
 
     return { licenses };
   },
+
+  fromUsers: (users) => ({ licenses: mapUsersToLicenses(users || []) }),
 
   sendLicenseEmail: async (userId) => {
     const response = await api.post('/admin/send-license-email', { userId });
@@ -159,6 +210,11 @@ export const notificationsAPI = {
     return response.data;
   },
 
+  create: async (notificationData) => {
+    const response = await api.post('/notifications', notificationData);
+    return response.data;
+  },
+
   markAsRead: async (notificationId) => {
     const response = await api.patch(`/notifications/${notificationId}/read`);
     return response.data;
@@ -174,7 +230,7 @@ export const notificationsAPI = {
     return response.data;
   },
 
-  delete: async (notificationId) => {
+  remove: async (notificationId) => {
     const response = await api.delete(`/notifications/${notificationId}`);
     return response.data;
   },

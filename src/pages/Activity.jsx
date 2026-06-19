@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
 import { Activity as ActivityIcon, Calendar, User } from 'lucide-react';
 import Badge from '../components/Badge';

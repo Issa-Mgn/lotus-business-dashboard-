@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from 'react';
 import { Lock, Mail, Phone, ShieldCheck, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

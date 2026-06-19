@@ -11,6 +11,37 @@ const initialForm = {
   published: true,
 };
 
+const getExcerpt = (value, maxLength = 150) => {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength).trim()}...`;
+};
+
+const compressImage = (file, maxWidth = 1280, quality = 0.82) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+
+  reader.onerror = () => reject(new Error("Impossible de lire l'image."));
+  reader.onload = () => {
+    const image = new window.Image();
+
+    image.onerror = () => reject(new Error("Impossible de préparer l'image."));
+    image.onload = () => {
+      const scale = Math.min(1, maxWidth / image.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+
+    image.src = reader.result;
+  };
+
+  reader.readAsDataURL(file);
+});
+
 const Infos = () => {
   const [infos, setInfos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,34 +75,33 @@ const Infos = () => {
     }));
   };
 
-  const handleImageSelect = (event) => {
+  const handleImageSelect = async (event) => {
     const file = event.target.files[0];
     
     if (!file) return;
 
-    // Vérifier que c'est bien une image
     if (!file.type.startsWith('image/')) {
       setMessage('Veuillez sélectionner une image valide.');
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage('L\'image ne doit pas dépasser 5MB.');
       return;
     }
 
-    // Convertir en base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result;
+    try {
+      const base64String = await compressImage(file);
       setFormData((current) => ({
         ...current,
         imageBase64: base64String,
       }));
       setImagePreview(base64String);
-    };
-    reader.readAsDataURL(file);
+      setMessage('');
+    } catch (error) {
+      console.error('Erreur préparation image:', error);
+      setMessage(error.message || "Impossible de préparer l'image.");
+    }
   };
 
   const removeImage = () => {
@@ -136,7 +166,7 @@ const Infos = () => {
       <header className="page-header">
         <div>
           <h1 className="page-title">Infos</h1>
-          <p className="page-subtitle">Publier des annonces avec images stockées sur ImageKit.</p>
+          <p className="page-subtitle">Publier des articles courts avec une image principale optionnelle.</p>
         </div>
       </header>
 
@@ -165,34 +195,15 @@ const Infos = () => {
             </label>
 
             <div className="field">
-              <span className="field-label">Image (optionnelle)</span>
+              <span className="field-label">Image principale</span>
               
               {imagePreview ? (
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={imagePreview} 
-                    alt="Aperçu" 
-                    style={{
-                      width: '100%',
-                      maxHeight: '200px',
-                      objectFit: 'cover',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--color-border)',
-                      display: 'block',
-                    }}
-                  />
+                <div className="image-preview-container">
+                  <img className="image-preview" src={imagePreview} alt="Aperçu" />
                   <button
-                    className="icon-button"
+                    className="image-remove-button"
                     onClick={removeImage}
                     type="button"
-                    style={{
-                      position: 'absolute',
-                      top: 'var(--spacing-sm)',
-                      right: 'var(--spacing-sm)',
-                      background: 'var(--color-danger)',
-                      color: 'white',
-                      border: 0,
-                    }}
                     title="Supprimer l'image"
                   >
                     <X size={16} />
@@ -200,33 +211,12 @@ const Infos = () => {
                 </div>
               ) : (
                 <label 
+                  className="image-upload-zone"
                   htmlFor="image-upload"
-                  style={{
-                    border: '2px dashed var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                    padding: 'var(--spacing-lg)',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'var(--transition-fast)',
-                    background: 'var(--color-surface-2)',
-                    display: 'block',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-accent)';
-                    e.currentTarget.style.background = 'var(--color-border)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                    e.currentTarget.style.background = 'var(--color-surface-2)';
-                  }}
                 >
-                  <Upload size={32} style={{ color: 'var(--color-muted)', margin: '0 auto var(--spacing-sm)', display: 'block' }} />
-                  <p className="muted" style={{ fontSize: 'var(--text-sm)', marginBottom: 'var(--spacing-xs)' }}>
-                    Cliquez pour sélectionner une image
-                  </p>
-                  <p className="muted" style={{ fontSize: 'var(--text-xs)' }}>
-                    JPG, PNG, GIF (max 5MB)
-                  </p>
+                  <Upload size={28} />
+                  <strong>Ajouter la première image de l'article</strong>
+                  <span>JPG, PNG ou WEBP. Compression automatique avant envoi.</span>
                 </label>
               )}
               
@@ -247,6 +237,18 @@ const Infos = () => {
 
             {message && <p className={`form-message ${message.includes('succès') ? '' : 'error'}`}>{message}</p>}
 
+            <div className="article-preview">
+              <div className="article-preview-media">
+                {imagePreview ? <img src={imagePreview} alt="" /> : <Image size={24} />}
+              </div>
+              <div className="article-preview-body">
+                <p className="article-preview-kicker">Aperçu article</p>
+                <h3>{formData.title || 'Titre de votre publication'}</h3>
+                <p>{getExcerpt(formData.content) || "Les premières lignes du message apparaîtront ici."}</p>
+                <span>lotus-business.app</span>
+              </div>
+            </div>
+
             <button className="primary-button" disabled={saving} type="submit">
               <span className="inline-cell">
                 <Send size={16} />
@@ -266,8 +268,8 @@ const Infos = () => {
           ) : (
             infos.map((info) => (
               <article className="info-item" key={info.id}>
-                {info.imageUrl ? (
-                  <img className="info-image" src={info.imageUrl} alt={info.title} />
+                {info.thumbnailUrl || info.imageUrl ? (
+                  <img className="info-image" src={info.thumbnailUrl || info.imageUrl} alt={info.title} loading="lazy" />
                 ) : (
                   <div className="info-image-placeholder">
                     <Image size={22} />

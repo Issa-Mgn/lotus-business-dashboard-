@@ -10,11 +10,7 @@ const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
-    return (
-      <div className="loading-state" style={{ minHeight: '100vh', border: 0, borderRadius: 0 }}>
-        Chargement...
-      </div>
-    );
+    return <div className="auth-loading" aria-label="Chargement" />;
   }
 
   if (!isAuthenticated) {

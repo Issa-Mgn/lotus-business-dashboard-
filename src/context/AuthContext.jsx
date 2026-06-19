@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components, react-hooks/set-state-in-effect */
-import { createContext, useContext, useEffect, useState } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -30,11 +30,7 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  const [loading] = useState(false);
 
   const login = async (email, password) => {
     try {
