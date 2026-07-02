@@ -7,7 +7,7 @@ import { infosAPI } from '../services/api';
 const initialForm = {
   title: '',
   content: '',
-  imageBase64: '',
+  images: [], // Tableau d'images multiples
   published: true,
 };
 
@@ -48,7 +48,7 @@ const Infos = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState(initialForm);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]); // Tableau de prévisualisations
   const fileInputRef = useRef(null);
 
   const loadInfos = async () => {
@@ -76,40 +76,45 @@ const Infos = () => {
   };
 
   const handleImageSelect = async (event) => {
-    const file = event.target.files[0];
+    const files = Array.from(event.target.files);
     
-    if (!file) return;
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
-      setMessage('Veuillez sélectionner une image valide.');
-      return;
-    }
+    // Vérifier chaque fichier
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        setMessage('Veuillez sélectionner uniquement des images.');
+        return;
+      }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setMessage('L\'image ne doit pas dépasser 5MB.');
-      return;
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage(`L'image ${file.name} ne doit pas dépasser 5MB.`);
+        return;
+      }
     }
 
     try {
-      const base64String = await compressImage(file);
+      const base64Strings = await Promise.all(files.map(file => compressImage(file)));
+      
       setFormData((current) => ({
         ...current,
-        imageBase64: base64String,
+        images: [...current.images, ...base64Strings],
       }));
-      setImagePreview(base64String);
+      
+      setImagePreviews((current) => [...current, ...base64Strings]);
       setMessage('');
     } catch (error) {
-      console.error('Erreur préparation image:', error);
-      setMessage(error.message || "Impossible de préparer l'image.");
+      console.error('Erreur préparation images:', error);
+      setMessage(error.message || "Impossible de préparer les images.");
     }
   };
 
-  const removeImage = () => {
+  const removeImage = (index) => {
     setFormData((current) => ({
       ...current,
-      imageBase64: '',
+      images: current.images.filter((_, i) => i !== index),
     }));
-    setImagePreview(null);
+    setImagePreviews((current) => current.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -124,7 +129,7 @@ const Infos = () => {
       const response = await infosAPI.create(formData);
       setInfos((current) => [response.info, ...current]);
       setFormData(initialForm);
-      setImagePreview(null);
+      setImagePreviews([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -195,36 +200,42 @@ const Infos = () => {
             </label>
 
             <div className="field">
-              <span className="field-label">Image principale</span>
+              <span className="field-label">Images (multiple autorisé)</span>
               
-              {imagePreview ? (
-                <div className="image-preview-container">
-                  <img className="image-preview" src={imagePreview} alt="Aperçu" />
-                  <button
-                    className="image-remove-button"
-                    onClick={removeImage}
-                    type="button"
-                    title="Supprimer l'image"
-                  >
-                    <X size={16} />
-                  </button>
+              {imagePreviews.length > 0 ? (
+                <div className="image-previews-grid">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="image-preview-container">
+                      <img className="image-preview" src={preview} alt={`Aperçu ${index + 1}`} />
+                      <button
+                        className="image-remove-button"
+                        onClick={() => removeImage(index)}
+                        type="button"
+                        title="Supprimer l'image"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label 
-                  className="image-upload-zone"
-                  htmlFor="image-upload"
-                >
-                  <Upload size={28} />
-                  <strong>Ajouter la première image de l'article</strong>
-                  <span>JPG, PNG ou WEBP. Compression automatique avant envoi.</span>
-                </label>
-              )}
+              ) : null}
+              
+              <label 
+                className="image-upload-zone"
+                htmlFor="image-upload"
+                style={{ marginTop: imagePreviews.length > 0 ? 'var(--spacing-md)' : 0 }}
+              >
+                <Upload size={28} />
+                <strong>Ajouter des images</strong>
+                <span>Vous pouvez sélectionner plusieurs images. JPG, PNG ou WEBP. Compression automatique.</span>
+              </label>
               
               <input
                 id="image-upload"
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageSelect}
                 style={{ display: 'none' }}
               />
