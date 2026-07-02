@@ -9,10 +9,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Clock, KeyRound, Users, Wallet } from 'lucide-react';
+import { Clock, Download, KeyRound, Users, Wallet } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import Badge from '../components/Badge';
-import { licensesAPI, usersAPI } from '../services/api';
+import { licensesAPI, usersAPI, downloadsAPI } from '../services/api';
 
 const LICENSE_PRICES_FCFA = {
   FREE: 0,
@@ -113,6 +113,7 @@ const Dashboard = () => {
     activeLicenses: 0,
     expiringSoon: 0,
     totalRevenue: 0,
+    totalDownloads: 0,
   });
   const [loading, setLoading] = useState(true);
   const [recentUsers, setRecentUsers] = useState([]);
@@ -137,12 +138,22 @@ const Dashboard = () => {
         .filter((license) => license.daysLeft <= 7 && license.daysLeft > 0)
         .sort((a, b) => a.daysLeft - b.daysLeft);
 
+      // Charger les statistiques de téléchargements
+      let totalDownloads = 0;
+      try {
+        const downloadCount = await downloadsAPI.getCount();
+        totalDownloads = downloadCount.total || 0;
+      } catch (error) {
+        console.error('Erreur chargement téléchargements:', error);
+      }
+
       setStats({
         totalUsers: users.length,
         totalLicenses: licenses.length,
         activeLicenses,
         expiringSoon: soon.length,
         totalRevenue,
+        totalDownloads,
       });
 
       setRevenueChart(buildRevenueChart(users));
@@ -179,6 +190,7 @@ const Dashboard = () => {
       <section className="stats-grid">
         <StatCard icon={Users} label="Total utilisateurs" value={stats.totalUsers} color="primary" />
         <StatCard icon={KeyRound} label="Licences actives" value={stats.activeLicenses} color="success" />
+        <StatCard icon={Download} label="Téléchargements" value={stats.totalDownloads} color="primary" />
         <StatCard icon={Clock} label="Expirent dans 7 jours" value={stats.expiringSoon} color="warning" />
         <StatCard icon={Wallet} label="Revenus totaux" value={formatCurrency(stats.totalRevenue)} color="success" />
       </section>
@@ -268,7 +280,7 @@ const Dashboard = () => {
         </div>
 
         <div>
-          <h2 className="section-title">Licences a surveiller</h2>
+          <h2 className="section-title">Licences à surveiller</h2>
           <div className="list-panel">
             {expiringLicenses.length === 0 ? (
               <div className="empty-state" style={{ border: 0 }}>Aucune licence proche de l'expiration</div>

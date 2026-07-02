@@ -80,6 +80,12 @@ export const usersAPI = {
     return response.data;
   },
 
+  createFromAdmin: async (userData) => {
+    const response = await api.post('/admin/users', userData);
+    clearUsersCache();
+    return response.data;
+  },
+
   getAll: async ({ force = false } = {}) => {
     const now = Date.now();
 
@@ -139,6 +145,18 @@ export const usersAPI = {
     clearUsersCache();
     return response.data;
   },
+
+  update: async (userId, userData) => {
+    const response = await api.patch(`/admin/users/${userId}`, userData);
+    clearUsersCache();
+    return response.data;
+  },
+
+  delete: async (userId) => {
+    const response = await api.delete(`/admin/users/${userId}`);
+    clearUsersCache();
+    return response.data;
+  },
 };
 
 export const licensesAPI = {
@@ -188,6 +206,11 @@ export const infosAPI = {
     return response.data;
   },
 
+  getAllPublic: async () => {
+    const response = await axios.get(`${API_URL.replace('/api', '/api/public')}/infos`);
+    return response.data;
+  },
+
   create: async (infoData) => {
     const response = await api.post('/admin/infos', infoData);
     return response.data;
@@ -200,6 +223,30 @@ export const infosAPI = {
 
   remove: async (infoId) => {
     const response = await api.delete(`/admin/infos/${infoId}`);
+    return response.data;
+  },
+};
+
+export const reactionsAPI = {
+  addReaction: async (infoId, reactionType, userId = null) => {
+    const response = await axios.post(
+      `${API_URL.replace('/api', '/api/public')}/infos/${infoId}/reactions`,
+      { reactionType, userId }
+    );
+    return response.data;
+  },
+
+  getReactions: async (infoId) => {
+    const response = await axios.get(
+      `${API_URL.replace('/api', '/api/public')}/infos/${infoId}/reactions`
+    );
+    return response.data;
+  },
+
+  getStats: async (infoId) => {
+    const response = await axios.get(
+      `${API_URL.replace('/api', '/api/public')}/infos/${infoId}/reactions/stats`
+    );
     return response.data;
   },
 };
@@ -259,6 +306,73 @@ export const profileAPI = {
       currentPassword,
       newPassword,
     });
+    return response.data;
+  },
+};
+
+export const downloadsAPI = {
+  getCount: async () => {
+    const response = await api.get('/downloads/count');
+    return response.data;
+  },
+
+  getStats: async (period = '7d') => {
+    const response = await api.get(`/downloads/stats?period=${period}`);
+    return response.data;
+  },
+
+  trackDownload: async (source = 'website') => {
+    const response = await api.post('/downloads/track', { source });
+    return response.data;
+  },
+};
+
+export const devicesAPI = {
+  /**
+   * Enregistrer un nouvel appareil (appelé lors du login)
+   */
+  register: async (deviceData) => {
+    const response = await api.post('/devices/register', deviceData);
+    return response.data;
+  },
+
+  /**
+   * Récupérer tous les appareils de l'utilisateur connecté
+   */
+  getMyDevices: async () => {
+    const response = await api.get('/devices/my-devices');
+    return response.data;
+  },
+
+  /**
+   * Supprimer un de mes appareils
+   */
+  deleteMyDevice: async (deviceId) => {
+    const response = await api.delete(`/devices/my-devices/${deviceId}`);
+    return response.data;
+  },
+
+  /**
+   * Récupérer tous les appareils d'un utilisateur (admin uniquement)
+   */
+  getUserDevices: async (userId) => {
+    const response = await api.get(`/devices/user/${userId}`);
+    return response.data;
+  },
+
+  /**
+   * Réinitialiser un appareil (admin) - pour débloquer un utilisateur FREE
+   */
+  resetDevice: async (userId, deviceId) => {
+    const response = await api.post('/devices/reset', { userId, deviceId });
+    return response.data;
+  },
+
+  /**
+   * Supprimer un appareil (admin)
+   */
+  adminDeleteDevice: async (userId, deviceId) => {
+    const response = await api.delete(`/devices/user/${userId}/${deviceId}`);
     return response.data;
   },
 };

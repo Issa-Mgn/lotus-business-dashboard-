@@ -237,17 +237,6 @@ const Infos = () => {
 
             {message && <p className={`form-message ${message.includes('succès') ? '' : 'error'}`}>{message}</p>}
 
-            <div className="article-preview">
-              <div className="article-preview-media">
-                {imagePreview ? <img src={imagePreview} alt="" /> : <Image size={24} />}
-              </div>
-              <div className="article-preview-body">
-                <p className="article-preview-kicker">Aperçu article</p>
-                <h3>{formData.title || 'Titre de votre publication'}</h3>
-                <p>{getExcerpt(formData.content) || "Les premières lignes du message apparaîtront ici."}</p>
-                <span>lotus-business.app</span>
-              </div>
-            </div>
 
             <button className="primary-button" disabled={saving} type="submit">
               <span className="inline-cell">
@@ -282,6 +271,16 @@ const Infos = () => {
                     <Badge variant={info.published ? 'success' : 'warning'}>{info.published ? 'ACTIVE' : 'DRAFT'}</Badge>
                   </div>
                   <p>{info.content}</p>
+                  {info.reactionStats && info.totalReactions > 0 && (
+                    <div className="info-reactions">
+                      <span className="muted">Réactions : {info.totalReactions} • </span>
+                      {Object.entries(info.reactionStats).map(([type, count]) => (
+                        <span key={type} className="reaction-stat">
+                          {type}: {count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <span className="muted">
                     {new Date(info.createdAt).toLocaleDateString('fr-FR')}
                   </span>

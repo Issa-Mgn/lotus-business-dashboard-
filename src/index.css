@@ -129,6 +129,15 @@ button {
   background: var(--color-border-strong);
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 200ms ease-in-out;
 }
@@ -620,6 +629,22 @@ button {
   border-color: var(--color-accent);
 }
 
+.search-box {
+  align-items: center;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-muted);
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: 12px var(--spacing-md);
+  transition: border-color var(--transition-fast);
+}
+
+.search-box:focus-within {
+  border-color: var(--color-accent);
+}
+
 .search-input {
   background: transparent;
   border: 0;
@@ -638,11 +663,12 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 1200px;
   width: 100%;
 }
 
@@ -700,6 +726,17 @@ button {
   padding: 3px 10px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.pill-badge {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  color: var(--color-accent-soft);
+  display: inline-flex;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  padding: 2px 10px;
 }
 
 .badge-free,
@@ -987,6 +1024,14 @@ button {
     align-items: flex-start;
     flex-direction: column;
     gap: var(--spacing-md);
+  }
+
+  .page-header > div:last-child {
+    width: 100%;
+  }
+
+  .page-header > div:last-child > button {
+    flex: 1;
   }
 
   .stats-grid {
@@ -1419,54 +1464,61 @@ button {
     white-space: normal;
   }
 }
-/* Mobile tables: keep the desktop table model and use horizontal scroll. */
+/* Mobile tables: FORCE scroll horizontal with better touch support */
 @media (max-width: 767px) {
   .table-shell {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    overflow-x: auto;
+    overflow-x: auto !important;
     overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative;
+    width: 100%;
   }
 
   .data-table {
     border-collapse: collapse;
     border-spacing: 0;
-    display: table;
-    min-width: 760px;
+    display: table !important;
+    min-width: 1200px !important;
     width: 100%;
   }
 
   .data-table thead {
-    display: table-header-group;
+    display: table-header-group !important;
   }
 
   .data-table tbody {
-    display: table-row-group;
+    display: table-row-group !important;
   }
 
   .data-table tr {
     background: transparent;
     border: 0;
     border-radius: 0;
-    display: table-row;
+    display: table-row !important;
     overflow: visible;
     width: auto;
   }
 
   .data-table th,
   .data-table td {
-    display: table-cell;
-    padding: 13px 14px;
+    display: table-cell !important;
+    padding: 10px 12px;
     text-align: left !important;
     vertical-align: middle;
     white-space: nowrap;
     width: auto;
   }
 
+  .data-table th {
+    font-size: 10px;
+    padding: 10px 12px;
+  }
+
   .data-table td::before {
-    content: none;
+    content: none !important;
   }
 
   .data-table td > * {
@@ -1483,13 +1535,21 @@ button {
 
   .data-table .avatar {
     display: flex;
+    height: 28px;
+    width: 28px;
+    font-size: 11px;
   }
 
   .data-table .strong,
   .data-table .muted,
   .data-table .mono {
-    overflow-wrap: anywhere;
-    white-space: normal;
+    font-size: var(--text-xs);
+  }
+
+  .data-table .icon-button,
+  .data-table .danger-action {
+    height: 32px;
+    width: 32px;
   }
 }
 .header-actions {
@@ -1511,6 +1571,7 @@ button {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
+  justify-content: center;
   min-height: 40px;
   padding: 0 14px;
   transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
@@ -1519,6 +1580,29 @@ button {
 .ghost-button:hover {
   background: var(--color-surface-2);
   border-color: var(--color-border-strong);
+  color: var(--color-accent);
+}
+
+.secondary-button {
+  align-items: center;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-accent-soft);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  gap: var(--spacing-sm);
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.secondary-button:hover {
+  background: var(--color-border);
   color: var(--color-accent);
 }
 
@@ -3930,4 +4014,76 @@ body {
 
 .modal-content .section-title {
   margin-bottom: var(--spacing-lg);
+}
+
+
+/* ===========================
+   TABLE STYLES
+   =========================== */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.data-table thead {
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: var(--spacing-md) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-surface-2);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Responsive table scroll hint */
+@media (max-width: 1400px) {
+  .data-table {
+    box-shadow: inset -10px 0 10px -10px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Info reactions */
+.info-reactions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.reaction-stat {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  background: var(--surface-secondary);
+  border-radius: 4px;
 }

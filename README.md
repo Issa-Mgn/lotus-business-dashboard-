@@ -4,6 +4,36 @@ Dashboard web React pour l'administration de la plateforme Lotus Business.
 
 ---
 
+## 🆕 Dernières Corrections (Juin 2026)
+
+### ✅ Messages d'Erreur et Design Améliorés
+
+1. **Messages d'erreur conditionnels correctement affichés**:
+   - ✅ Messages de succès en **vert** ("Utilisateur créé", "modifié", "supprimé")
+   - ✅ Messages d'erreur en **rouge** uniquement pour les vraies erreurs
+   - ✅ Plus de messages verts affichés en rouge !
+   - Backend retourne maintenant des messages d'erreur précis :
+     - "Cet email est déjà utilisé"
+     - "Ce numéro de téléphone est déjà utilisé"
+     - "Erreur de génération de clé"
+
+2. **Format de clé de licence affiché correctement**:
+   - Nouveau format : `LOT-1234-ABCD-5678` (4 chiffres - 4 lettres MAJUSCULES - 4 chiffres)
+   - Affichage en police monospace pour meilleure lisibilité
+
+3. **Suppression en cascade fonctionnelle**:
+   - Quand un utilisateur est supprimé, sa licence est automatiquement supprimée
+   - Plus besoin de supprimer manuellement sur Supabase
+   - Message de confirmation clair
+
+4. **Design professionnel amélioré**:
+   - Cartes statistiques avec icônes colorés
+   - Tableaux responsifs avec scroll horizontal sur mobile
+   - Modaux d'édition et d'ajout optimisés
+   - Badges de statut cohérents (ACTIVE/EXPIRED/SUSPENDED)
+
+---
+
 ## 📋 Table des matières
 
 - [À propos](#à-propos)
