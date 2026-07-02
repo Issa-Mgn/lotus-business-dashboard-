@@ -23,6 +23,7 @@ const Users = () => {
     lastName: '',
     licenseType: 'FREE',
     licenseStatus: 'ACTIVE',
+    subscriptionType: 'MONTHLY',
     expirationDate: '',
     maxSimultaneousLogins: 1,
     lastLoginIp: '',
@@ -86,6 +87,7 @@ const Users = () => {
       lastName: user.lastName || '',
       licenseType: user.licenseType || 'FREE',
       licenseStatus: user.licenseStatus || 'ACTIVE',
+      subscriptionType: user.subscriptionType || 'MONTHLY',
       expirationDate: user.expirationDate ? new Date(user.expirationDate).toISOString().split('T')[0] : '',
       maxSimultaneousLogins: user.maxSimultaneousLogins || 1,
       lastLoginIp: user.lastLoginIp || '',
@@ -130,7 +132,7 @@ const Users = () => {
     setSaving(true);
 
     try {
-      const response = await usersAPI.createFromAdmin(addForm);
+      await usersAPI.createFromAdmin(addForm);
       setMessage(`Utilisateur créé! Un email a été envoyé à ${addForm.email} avec sa clé de licence.`);
       setShowAddModal(false);
       await loadUsers();
@@ -281,6 +283,7 @@ const Users = () => {
                 <th>Contact</th>
                 <th>Clé Licence</th>
                 <th>Type</th>
+                <th>Abonnement</th>
                 <th>Status</th>
                 <th>Expiration</th>
                 <th>Appareils</th>
@@ -315,6 +318,15 @@ const Users = () => {
                     </code>
                   </td>
                   <td data-label="Type">{getLicenseBadge(user.licenseType)}</td>
+                  <td data-label="Abonnement">
+                    {user.licenseType === 'PREMIUM' ? (
+                      <Badge variant="info">
+                        {user.subscriptionType === 'ANNUAL' ? 'Annuel (10k/an)' : 'Mensuel (999/mois)'}
+                      </Badge>
+                    ) : (
+                      <span className="muted">-</span>
+                    )}
+                  </td>
                   <td data-label="Status">{getStatusBadge(user.licenseStatus)}</td>
                   <td data-label="Expiration">
                     <span className="muted" style={{ fontSize: 'var(--text-sm)' }}>
@@ -462,6 +474,33 @@ const Users = () => {
                     </select>
                   </label>
                 </div>
+
+                {editForm.licenseType === 'PREMIUM' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+                    <label className="field">
+                      <span className="field-label">Type d'abonnement</span>
+                      <select
+                        className="input"
+                        value={editForm.subscriptionType}
+                        onChange={(e) => setEditForm({ ...editForm, subscriptionType: e.target.value })}
+                      >
+                        <option value="MONTHLY">Mensuel (999 FCFA/mois)</option>
+                        <option value="ANNUAL">Annuel (10000 FCFA/an)</option>
+                      </select>
+                    </label>
+
+                    <label className="field">
+                      <span className="field-label">Date d'expiration</span>
+                      <input
+                        className="input"
+                        type="date"
+                        value={editForm.expirationDate}
+                        onChange={(e) => setEditForm({ ...editForm, expirationDate: e.target.value })}
+                      />
+                      <small className="muted">Vide = illimité (FREE)</small>
+                    </label>
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
                   <label className="field">
