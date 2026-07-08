@@ -183,7 +183,7 @@ export const adminsAPI = {
   },
 
   create: async (adminData) => {
-    const response = await api.post('/admin/create', adminData);
+    const response = await api.post('/admin/admins', adminData);
     return response.data;
   },
 
