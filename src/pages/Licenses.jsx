@@ -123,6 +123,15 @@ const Licenses = () => {
       render: (row) => <Badge>{row.type}</Badge>,
     },
     {
+      header: 'Abonnement',
+      field: 'subscriptionType',
+      render: (row) => row.type === 'PREMIUM' ? (
+        <Badge variant="info">
+          {row.user?.subscriptionType === 'ANNUAL' ? 'Annuel (10k/an)' : 'Mensuel (999/mois)'}
+        </Badge>
+      ) : <span className="muted">-</span>,
+    },
+    {
       header: 'Statut',
       field: 'status',
       render: (row) => <Badge>{row.status}</Badge>,

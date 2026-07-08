@@ -775,6 +775,19 @@ button {
   color: var(--color-warning);
 }
 
+/* Subscription badges responsive */
+.badge-subscription {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+}
+
+@media (max-width: 767px) {
+  .badge-subscription {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
 .inline-cell {
   align-items: center;
   display: flex;

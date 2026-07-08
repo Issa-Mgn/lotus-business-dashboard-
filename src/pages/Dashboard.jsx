@@ -16,8 +16,8 @@ import { licensesAPI, usersAPI, downloadsAPI } from '../services/api';
 
 const LICENSE_PRICES_FCFA = {
   FREE: 0,
-  MONTHLY: Number(import.meta.env.VITE_MONTHLY_PRICE_FCFA || 5000),
-  ANNUAL: Number(import.meta.env.VITE_ANNUAL_PRICE_FCFA || 50000),
+  MONTHLY: Number(import.meta.env.VITE_MONTHLY_PRICE_FCFA || 999),
+  ANNUAL: Number(import.meta.env.VITE_ANNUAL_PRICE_FCFA || 10000),
 };
 
 const getLicenseDurationDays = (user) => {
@@ -272,7 +272,14 @@ const Dashboard = () => {
                     <p className="strong">{user.firstName} {user.lastName}</p>
                     <p className="muted" style={{ fontSize: 'var(--text-sm)' }}>{user.email}</p>
                   </div>
-                  <Badge>{user.licenseType || 'FREE'}</Badge>
+                  <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                    <Badge>{user.licenseType || 'FREE'}</Badge>
+                    {user.licenseType === 'PREMIUM' && (
+                      <Badge variant="info" style={{ fontSize: 'var(--text-xs)' }}>
+                        {user.subscriptionType === 'ANNUAL' ? '10k/an' : '999/mois'}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))
             )}
